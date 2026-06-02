@@ -19,6 +19,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final FoodRepository foodRepository;
+    private final LlmCalorieService llmCalorieService;
 
     private User getAuthenticatedUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -39,12 +40,44 @@ public class UserService {
         if (request.getLastName() != null) {
             user.setLastName(request.getLastName());
         }
-        if (request.getAge() != null) {
+        
+        boolean needsRecalculate = false;
+        if (request.getAge() != null && !request.getAge().equals(user.getAge())) {
             user.setAge(request.getAge());
+            needsRecalculate = true;
         }
-        if (request.getGender() != null) {
+        if (request.getGender() != null && !request.getGender().equals(user.getGender())) {
             user.setGender(request.getGender());
+            needsRecalculate = true;
         }
+        if (request.getWeight() != null && !request.getWeight().equals(user.getWeight())) {
+            user.setWeight(request.getWeight());
+            needsRecalculate = true;
+        }
+        if (request.getHeight() != null && !request.getHeight().equals(user.getHeight())) {
+            user.setHeight(request.getHeight());
+            needsRecalculate = true;
+        }
+        if (request.getTarget() != null && !request.getTarget().equals(user.getTarget())) {
+            user.setTarget(request.getTarget());
+            needsRecalculate = true;
+        }
+
+        if (request.getDailyCalorieTarget() != null) {
+            // User manually overridden the target calorie
+            user.setDailyCalorieTarget(request.getDailyCalorieTarget());
+        } else if (needsRecalculate) {
+            // Automatically recalculate since parameters changed
+            int age = user.getAge() != null ? user.getAge() : 25;
+            String gender = user.getGender() != null ? user.getGender() : "MALE";
+            double weight = user.getWeight() != null ? user.getWeight() : 70.0;
+            double height = user.getHeight() != null ? user.getHeight() : 175.0;
+            String target = user.getTarget() != null ? user.getTarget() : "MAINTAIN";
+
+            int dailyCalorieTarget = llmCalorieService.calculateCalories(age, gender, weight, height, target);
+            user.setDailyCalorieTarget(dailyCalorieTarget);
+        }
+
         User updatedUser = userRepository.save(user);
         return mapToUserResponse(updatedUser);
     }
@@ -92,6 +125,10 @@ public class UserService {
                 .lastName(user.getLastName())
                 .age(user.getAge())
                 .gender(user.getGender())
+                .weight(user.getWeight())
+                .height(user.getHeight())
+                .target(user.getTarget())
+                .dailyCalorieTarget(user.getDailyCalorieTarget())
                 .email(user.getEmail())
                 .build();
     }

@@ -7,6 +7,7 @@ import '../models/models.dart';
 import '../../services/api_service.dart';
 import 'login_screen.dart';
 import 'analysis_screen.dart';
+import 'profile_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -21,7 +22,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   bool _isLoading = true;
   String? _errorMessage;
 
-  static const double _calorieGoal = 2000.0;
+  double _calorieGoal = 2000.0;
+  UserProfile? _userProfile;
   static const double _carbGoal = 250.0;
   static const double _proteinGoal = 120.0;
   static const double _fatGoal = 65.0;
@@ -47,6 +49,16 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     setState(() { _isLoading = true; _errorMessage = null; });
     _cardAnimController.reset();
     try {
+      try {
+        final profile = await ApiService.getUserProfile();
+        setState(() {
+          _userProfile = profile;
+          _calorieGoal = profile.dailyCalorieTarget.toDouble();
+        });
+      } catch (e) {
+        debugPrint('Failed to load user profile: $e');
+      }
+
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
       final summary = await ApiService.getDailySummary(dateStr);
       setState(() { _summary = summary; });
@@ -69,6 +81,15 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       }
     } finally {
       setState(() { _isLoading = false; });
+    }
+  }
+
+  void _openProfile() async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+    );
+    if (result == true) {
+      _loadData();
     }
   }
 
@@ -185,6 +206,19 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                             ],
                           ),
                         ),
+                        IconButton(
+                          onPressed: _openProfile,
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceBg,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            child: const Icon(Icons.person_rounded, color: AppColors.textPrimary, size: 20),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
                         IconButton(
                           onPressed: _pickDate,
                           icon: Container(

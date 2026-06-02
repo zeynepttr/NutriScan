@@ -53,6 +53,9 @@ class ApiService {
     required String password,
     required int age,
     required String gender,
+    required double weight,
+    required double height,
+    required String target,
   }) async {
     final response = await http.post(
       Uri.parse(ApiConstants.register),
@@ -64,6 +67,9 @@ class ApiService {
         'password': password,
         'age': age,
         'gender': gender,
+        'weight': weight,
+        'height': height,
+        'target': target,
       }),
     );
     if (response.statusCode != 200 && response.statusCode != 201) {
@@ -167,5 +173,49 @@ class ApiService {
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Silme başarısız: ${response.statusCode}');
     }
+  }
+
+  // USER PROFILE
+  static Future<UserProfile> getUserProfile() async {
+    final headers = await _authHeaders();
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/api/users/me'),
+      headers: headers,
+    );
+    if (response.statusCode == 200) {
+      return UserProfile.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Profil bilgileri alınamadı: ${response.statusCode}');
+  }
+
+  static Future<UserProfile> updateUserProfile({
+    String? firstName,
+    String? lastName,
+    int? age,
+    String? gender,
+    double? weight,
+    double? height,
+    String? target,
+    int? dailyCalorieTarget,
+  }) async {
+    final headers = await _authHeaders();
+    final response = await http.put(
+      Uri.parse('${ApiConstants.baseUrl}/api/users/me'),
+      headers: headers,
+      body: jsonEncode({
+        if (firstName != null) 'firstName': firstName,
+        if (lastName != null) 'lastName': lastName,
+        if (age != null) 'age': age,
+        if (gender != null) 'gender': gender,
+        if (weight != null) 'weight': weight,
+        if (height != null) 'height': height,
+        if (target != null) 'target': target,
+        if (dailyCalorieTarget != null) 'dailyCalorieTarget': dailyCalorieTarget,
+      }),
+    );
+    if (response.statusCode == 200) {
+      return UserProfile.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Profil güncellenemedi: ${response.statusCode} ${response.body}');
   }
 }

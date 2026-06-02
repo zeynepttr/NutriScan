@@ -7,6 +7,7 @@ import com.nutriscan.nutriscanbackend.DTO.UserResponse;
 import com.nutriscan.nutriscanbackend.config.JwtService;
 import com.nutriscan.nutriscanbackend.entity.User;
 import com.nutriscan.nutriscanbackend.repository.UserRepository;
+import com.nutriscan.nutriscanbackend.service.LlmCalorieService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final LlmCalorieService llmCalorieService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
@@ -36,8 +38,21 @@ public class AuthController {
         user.setLastName(request.getLastName());
         user.setAge(request.getAge());
         user.setGender(request.getGender());
+        user.setWeight(request.getWeight());
+        user.setHeight(request.getHeight());
+        user.setTarget(request.getTarget());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        // Calculate and set daily calorie goal using LLM/fallback
+        int age = request.getAge() != null ? request.getAge() : 25;
+        String gender = request.getGender() != null ? request.getGender() : "MALE";
+        double weight = request.getWeight() != null ? request.getWeight() : 70.0;
+        double height = request.getHeight() != null ? request.getHeight() : 175.0;
+        String target = request.getTarget() != null ? request.getTarget() : "MAINTAIN";
+
+        int dailyCalorieTarget = llmCalorieService.calculateCalories(age, gender, weight, height, target);
+        user.setDailyCalorieTarget(dailyCalorieTarget);
 
         User savedUser = userRepository.save(user);
         String jwtToken = jwtService.generateToken(savedUser);
@@ -48,6 +63,10 @@ public class AuthController {
                 .lastName(savedUser.getLastName())
                 .age(savedUser.getAge())
                 .gender(savedUser.getGender())
+                .weight(savedUser.getWeight())
+                .height(savedUser.getHeight())
+                .target(savedUser.getTarget())
+                .dailyCalorieTarget(savedUser.getDailyCalorieTarget())
                 .email(savedUser.getEmail())
                 .build();
 
@@ -77,6 +96,10 @@ public class AuthController {
                 .lastName(user.getLastName())
                 .age(user.getAge())
                 .gender(user.getGender())
+                .weight(user.getWeight())
+                .height(user.getHeight())
+                .target(user.getTarget())
+                .dailyCalorieTarget(user.getDailyCalorieTarget())
                 .email(user.getEmail())
                 .build();
 
@@ -85,4 +108,4 @@ public class AuthController {
                 .user(userResponse)
                 .build());
     }
-}
+}

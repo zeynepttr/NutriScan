@@ -29,6 +29,14 @@ public class User implements UserDetails {
 
     private String gender;
 
+    private Double weight;
+
+    private Double height;
+
+    private String target;
+
+    private Integer dailyCalorieTarget;
+
     @Column(unique = true)
     private String email;
 

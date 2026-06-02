@@ -94,3 +94,59 @@ class AnalysisResult {
     );
   }
 }
+
+class UserProfile {
+  final int id;
+  final String firstName;
+  final String lastName;
+  final int age;
+  final String gender;
+  final double weight;
+  final double height;
+  final String target;
+  final int dailyCalorieTarget;
+  final String email;
+
+  UserProfile({
+    required this.id,
+    required this.firstName,
+    required this.lastName,
+    required this.age,
+    required this.gender,
+    required this.weight,
+    required this.height,
+    required this.target,
+    required this.dailyCalorieTarget,
+    required this.email,
+  });
+
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    return UserProfile(
+      id: json['id'] ?? 0,
+      firstName: json['firstName'] ?? '',
+      lastName: json['lastName'] ?? '',
+      age: json['age'] ?? 0,
+      gender: json['gender'] ?? '',
+      weight: (json['weight'] as num?)?.toDouble() ?? 0.0,
+      height: (json['height'] as num?)?.toDouble() ?? 0.0,
+      target: json['target'] ?? 'MAINTAIN',
+      dailyCalorieTarget: json['dailyCalorieTarget'] ?? 2000,
+      email: json['email'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'firstName': firstName,
+      'lastName': lastName,
+      'age': age,
+      'gender': gender,
+      'weight': weight,
+      'height': height,
+      'target': target,
+      'dailyCalorieTarget': dailyCalorieTarget,
+      'email': email,
+    };
+  }
+}

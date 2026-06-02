@@ -15,5 +15,9 @@ public class UserResponse {
     private String lastName;
     private Integer age;
     private String gender;
+    private Double weight;
+    private Double height;
+    private String target;
+    private Integer dailyCalorieTarget;
     private String email;
 }
