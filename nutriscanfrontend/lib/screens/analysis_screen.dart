@@ -66,12 +66,139 @@ class _AnalysisScreenState extends State<AnalysisScreen> with TickerProviderStat
       final result = await ApiService.analyzeImage(_imageFile!);
       setState(() { _result = result; _state = AnalysisState.result; });
       _resultController.forward();
+      if (result.confidence < 0.8) {
+        if (!mounted) return;
+        _showLowConfidenceDialog(result.confidence);
+      }
     } catch (e) {
       setState(() {
         _errorMessage = 'Analiz başarısız. Lütfen daha net bir fotoğraf deneyin.';
         _state = AnalysisState.error;
       });
     }
+  }
+
+  void _showLowConfidenceDialog(double confidence) {
+    final percent = (confidence * 100).toInt();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: AppColors.cardBg,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: const BorderSide(color: Color(0xFFE2E8F0), width: 1.5),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.activeOrange.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.warning_amber_rounded,
+                    color: AppColors.activeOrange,
+                    size: 48,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Düşük Doğruluk Oranı',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Yemeğin doğruluk oranı (%$percent) hedeflenen %80 değerinin altındadır. Daha doğru besin değerleri hesaplanabilmesi için lütfen yemeği daha net ve aydınlık bir ortamda tekrar tarayın.',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 28),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [AppColors.primaryGreen, AppColors.mintGreen]),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primaryGreen.withOpacity(0.3),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        )
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        setState(() {
+                          _state = AnalysisState.picking;
+                          _imageFile = null;
+                          _result = null;
+                        });
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        'Yeniden Çek / Tara',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: TextButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      'Yine de Sonucu İncele',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _saveLog() async {
@@ -101,7 +228,13 @@ class _AnalysisScreenState extends State<AnalysisScreen> with TickerProviderStat
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.heroGradient),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFE8F5E9), Color(0xFFFFFFFF)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: SafeArea(
           child: Column(
             children: [
@@ -163,11 +296,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> with TickerProviderStat
               height: 140,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [AppColors.primaryPurple, AppColors.deepPurple],
+                  colors: [AppColors.primaryGreen, AppColors.mintGreen],
                 ),
                 shape: BoxShape.circle,
                 boxShadow: [
-                  BoxShadow(color: AppColors.primaryPurple.withOpacity(0.4), blurRadius: 40, spreadRadius: 10),
+                  BoxShadow(color: AppColors.primaryGreen.withOpacity(0.12), blurRadius: 40, spreadRadius: 10),
                 ],
               ),
               child: const Icon(Icons.camera_alt_rounded, size: 64, color: Colors.white),
@@ -190,16 +323,16 @@ class _AnalysisScreenState extends State<AnalysisScreen> with TickerProviderStat
           _buildSourceButton(
             label: 'Kamera ile Çek',
             icon: Icons.camera_alt_rounded,
-            gradient: const LinearGradient(colors: [AppColors.primaryPurple, AppColors.deepPurple]),
-            shadowColor: AppColors.primaryPurple,
+            gradient: AppColors.healthGradient,
+            shadowColor: AppColors.primaryGreen,
             onTap: () => _pickImage(ImageSource.camera),
           ),
           const SizedBox(height: 16),
           _buildSourceButton(
             label: 'Galeriden Seç',
             icon: Icons.photo_library_rounded,
-            gradient: const LinearGradient(colors: [AppColors.accentOrange, AppColors.warmOrange]),
-            shadowColor: AppColors.accentOrange,
+            gradient: AppColors.calorieGradient,
+            shadowColor: AppColors.activeOrange,
             onTap: () => _pickImage(ImageSource.gallery),
           ),
         ],
@@ -256,11 +389,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> with TickerProviderStat
             decoration: BoxDecoration(
               color: AppColors.cardBg,
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primaryPurple.withOpacity(0.3), width: 2),
+              border: Border.all(color: const Color(0xFFE2E8F0), width: 2),
             ),
             child: const Padding(
               padding: EdgeInsets.all(20),
-              child: CircularProgressIndicator(color: AppColors.primaryPurple, strokeWidth: 3),
+              child: CircularProgressIndicator(color: AppColors.primaryGreen, strokeWidth: 3),
             ),
           ),
           const SizedBox(height: 24),
@@ -314,7 +447,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> with TickerProviderStat
   Widget _buildResultState() {
     final r = _result!;
     final confidence = (r.confidence * 100).toInt();
-    final confColor = r.confidence > 0.8 ? AppColors.success : r.confidence > 0.6 ? AppColors.warmOrange : AppColors.error;
+    final confColor = r.confidence >= 0.8 ? AppColors.success : r.confidence >= 0.6 ? AppColors.activeOrange : AppColors.error;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -368,18 +501,25 @@ class _AnalysisScreenState extends State<AnalysisScreen> with TickerProviderStat
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFF2A1F56), Color(0xFF1E1540)]),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0xFF3A2E6A)),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.activeOrange.withOpacity(0.06),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
+                    )
+                  ],
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.local_fire_department_rounded, color: AppColors.accentOrange, size: 36),
+                    const Icon(Icons.local_fire_department_rounded, color: AppColors.activeOrange, size: 36),
                     const SizedBox(width: 12),
                     Text(
                       '${r.calories.toInt()}',
-                      style: GoogleFonts.plusJakartaSans(fontSize: 48, fontWeight: FontWeight.w900, color: AppColors.accentOrange),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 48, fontWeight: FontWeight.w900, color: AppColors.activeOrange),
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -393,11 +533,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> with TickerProviderStat
               // Macros
               Row(
                 children: [
-                  Expanded(child: _buildResultMacro('Karbonhidrat', r.carbohydrate, AppColors.lightPurple)),
+                  Expanded(child: _buildResultMacro('Karbonhidrat', r.carbohydrate, AppColors.carbYellow)),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildResultMacro('Protein', r.protein, AppColors.accentOrange)),
+                  Expanded(child: _buildResultMacro('Protein', r.protein, AppColors.proteinBlue)),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildResultMacro('Yağ', r.fat, AppColors.warmOrange)),
+                  Expanded(child: _buildResultMacro('Yağ', r.fat, AppColors.fatPink)),
                 ],
               ),
               const SizedBox(height: 28),
@@ -407,9 +547,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> with TickerProviderStat
                 height: 56,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [AppColors.accentOrange, AppColors.warmOrange]),
+                    gradient: AppColors.calorieGradient,
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: [BoxShadow(color: AppColors.accentOrange.withOpacity(0.4), blurRadius: 24, offset: const Offset(0, 8))],
+                    boxShadow: [BoxShadow(color: AppColors.activeOrange.withOpacity(0.25), blurRadius: 24, offset: const Offset(0, 8))],
                   ),
                   child: ElevatedButton(
                     onPressed: _saveLog,
@@ -425,7 +565,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> with TickerProviderStat
                 child: OutlinedButton(
                   onPressed: () => setState(() { _state = AnalysisState.picking; _imageFile = null; _result = null; }),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFF2E2550)),
+                    side: const BorderSide(color: Color(0xFFE2E8F0)),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                   child: Text('Yeniden Çek', style: GoogleFonts.plusJakartaSans(color: AppColors.textSecondary, fontSize: 15)),
@@ -442,9 +582,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> with TickerProviderStat
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withOpacity(0.25)),
       ),
       child: Column(
         children: [

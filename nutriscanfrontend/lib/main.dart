@@ -32,7 +32,7 @@ class NutriScanApp extends StatelessWidget {
     return MaterialApp(
       title: 'NutriScan',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme,
       home: isLoggedIn ? const DashboardScreen() : const LoginScreen(),
     );
   }

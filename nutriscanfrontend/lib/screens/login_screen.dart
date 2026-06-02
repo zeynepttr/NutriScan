@@ -69,7 +69,13 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.heroGradient),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFE8F5E9), Color(0xFFFFFFFF)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -88,13 +94,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                           width: 52,
                           height: 52,
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [AppColors.accentOrange, AppColors.warmOrange],
-                            ),
+                            gradient: AppColors.calorieGradient,
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.accentOrange.withOpacity(0.4),
+                                color: AppColors.activeOrange.withOpacity(0.4),
                                 blurRadius: 20,
                                 offset: const Offset(0, 8),
                               ),
@@ -180,7 +184,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                       child: _isLoading
                           ? Container(
                               decoration: BoxDecoration(
-                                gradient: const LinearGradient(colors: [AppColors.primaryPurple, AppColors.deepPurple]),
+                                gradient: AppColors.healthGradient,
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: const Center(
@@ -192,11 +196,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                             )
                           : DecoratedBox(
                               decoration: BoxDecoration(
-                                gradient: const LinearGradient(colors: [AppColors.primaryPurple, AppColors.deepPurple]),
+                                gradient: AppColors.healthGradient,
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.primaryPurple.withOpacity(0.5),
+                                    color: AppColors.primaryGreen.withOpacity(0.2),
                                     blurRadius: 24,
                                     offset: const Offset(0, 8),
                                   ),
@@ -222,12 +226,12 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     // Divider
                     Row(
                       children: [
-                        Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
+                        Expanded(child: Divider(color: Colors.black.withOpacity(0.08))),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text('veya', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
                         ),
-                        Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
+                        Expanded(child: Divider(color: Colors.black.withOpacity(0.08))),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -239,9 +243,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                           MaterialPageRoute(builder: (_) => const RegisterScreen()),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFF2E2550), width: 1.5),
+                          side: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          foregroundColor: AppColors.textPrimary,
+                          foregroundColor: AppColors.primaryGreen,
                         ),
                         child: Text(
                           'Hesap Oluştur',

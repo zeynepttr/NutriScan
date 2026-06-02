@@ -34,6 +34,12 @@ public class MealLogController {
         return ResponseEntity.status(HttpStatus.CREATED).body(mealLogService.logMealFromImage(image, date));
     }
 
+    @PostMapping("/analyze")
+    public ResponseEntity<MealLogResponse> analyzeImage(
+            @RequestParam("image") MultipartFile image) throws IOException {
+        return ResponseEntity.ok(mealLogService.analyzeImage(image));
+    }
+
     @GetMapping("/summary")
     public ResponseEntity<DailyMealSummaryResponse> getDailySummary(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {

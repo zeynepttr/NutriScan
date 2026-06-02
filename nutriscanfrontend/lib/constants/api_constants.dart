@@ -15,8 +15,8 @@ class ApiConstants {
   // POST /api/meals
   static const String mealLogs = meals;
 
-  // POST /api/meals/analyze-and-log
-  static const String analyze = '$meals/analyze-and-log';
+  // POST /api/meals/analyze
+  static const String analyze = '$meals/analyze';
 
   // GET /api/meals/summary
   static const String dailySummary = '$meals/summary';

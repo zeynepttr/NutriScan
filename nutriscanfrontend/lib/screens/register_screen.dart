@@ -68,7 +68,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.heroGradient),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFE8F5E9), Color(0xFFFFFFFF)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -144,7 +150,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           decoration: BoxDecoration(
                             color: AppColors.surfaceBg,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFF2E2550)),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
                           ),
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: DropdownButtonHideUnderline(
@@ -188,18 +194,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: _isLoading
                         ? Container(
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(colors: [AppColors.accentOrange, AppColors.warmOrange]),
+                              gradient: AppColors.healthGradient,
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: const Center(child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5)),
                           )
                         : DecoratedBox(
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(colors: [AppColors.accentOrange, AppColors.warmOrange]),
+                              gradient: AppColors.healthGradient,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.accentOrange.withOpacity(0.4),
+                                  color: AppColors.primaryGreen.withOpacity(0.4),
                                   blurRadius: 24, offset: const Offset(0, 8),
                                 ),
                               ],

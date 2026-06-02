@@ -87,6 +87,47 @@ public class MealLogService {
         return mapToResponse(saved);
     }
 
+    public MealLogResponse analyzeImage(MultipartFile image) throws IOException {
+        // 1. Prepare request for Flask AI API
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        ByteArrayResource fileResource = new ByteArrayResource(image.getBytes()) {
+            @Override
+            public String getFilename() {
+                return image.getOriginalFilename() != null ? image.getOriginalFilename() : "image.jpg";
+            }
+        };
+        body.add("image", fileResource);
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        // 2. Call Flask AI API
+        String url = aiApiUrl + "/analyze";
+        AiAnalysisResponse aiResponse;
+        try {
+            aiResponse = restTemplate.postForObject(url, requestEntity, AiAnalysisResponse.class);
+        } catch (Exception e) {
+            throw new IllegalStateException("AI API is currently unavailable: " + e.getMessage(), e);
+        }
+
+        if (aiResponse == null || aiResponse.getFood() == null) {
+            throw new IllegalArgumentException("AI model failed to analyze the image or returned an empty response");
+        }
+
+        // 3. Map AI response to MealLogResponse (WITHOUT saving to database)
+        return MealLogResponse.builder()
+                .foodName(aiResponse.getFood())
+                .calories(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getCalories() : 0.0f)
+                .fat(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getFat_g() : 0.0f)
+                .protein(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getProtein_g() : 0.0f)
+                .carbohydrate(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getCarb_g() : 0.0f)
+                .confidence(aiResponse.getConfidence())
+                .build();
+    }
+
     private User getAuthenticatedUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByEmail(email)

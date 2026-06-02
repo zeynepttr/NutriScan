@@ -81,9 +81,31 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.primaryPurple,
-              surface: AppColors.cardBg,
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primaryGreen,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: AppColors.textPrimary,
+              secondary: AppColors.activeOrange,
+            ),
+            dialogBackgroundColor: Colors.white,
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primaryGreen,
+                textStyle: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            datePickerTheme: DatePickerThemeData(
+              headerBackgroundColor: AppColors.primaryGreen,
+              headerForegroundColor: Colors.white,
+              dayStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500),
+              weekdayStyle: GoogleFonts.plusJakartaSans(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.bold,
+              ),
+              yearStyle: GoogleFonts.plusJakartaSans(),
             ),
           ),
           child: child!,
@@ -124,14 +146,14 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF0E0B1A), Color(0xFF1A1530)],
+            colors: [Color(0xFFE8F5E9), Color(0xFFFFFFFF)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
         ),
         child: SafeArea(
           child: RefreshIndicator(
-            color: AppColors.primaryPurple,
+            color: AppColors.primaryGreen,
             backgroundColor: AppColors.cardBg,
             onRefresh: _loadData,
             child: CustomScrollView(
@@ -170,7 +192,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                             decoration: BoxDecoration(
                               color: AppColors.surfaceBg,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFF2E2550)),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
                             ),
                             child: const Icon(Icons.calendar_month_rounded, color: AppColors.textPrimary, size: 20),
                           ),
@@ -183,7 +205,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                             decoration: BoxDecoration(
                               color: AppColors.surfaceBg,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFF2E2550)),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
                             ),
                             child: const Icon(Icons.logout_rounded, color: AppColors.textSecondary, size: 20),
                           ),
@@ -198,7 +220,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                   child: _isLoading
                       ? const SizedBox(
                           height: 400,
-                          child: Center(child: CircularProgressIndicator(color: AppColors.primaryPurple)),
+                          child: Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)),
                         )
                       : _errorMessage != null
                           ? _buildErrorState()
@@ -235,16 +257,12 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1E1540), Color(0xFF2A1F56)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFF3A2E6A), width: 1),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryPurple.withOpacity(0.15),
+            color: AppColors.primaryGreen.withOpacity(0.08),
             blurRadius: 32, offset: const Offset(0, 8),
           ),
         ],
@@ -278,7 +296,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                 ),
               ],
             ),
-            progressColor: percent >= 1.0 ? AppColors.error : AppColors.accentOrange,
+            progressColor: percent >= 1.0 ? AppColors.error : AppColors.activeOrange,
             backgroundColor: AppColors.surfaceBg,
             circularStrokeCap: CircularStrokeCap.round,
             animation: true,
@@ -288,8 +306,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildCalorieStat('Hedef', '${_calorieGoal.toInt()} kcal', AppColors.lightPurple),
-              Container(width: 1, height: 32, color: const Color(0xFF3A2E6A), margin: const EdgeInsets.symmetric(horizontal: 20)),
+              _buildCalorieStat('Hedef', '${_calorieGoal.toInt()} kcal', AppColors.primaryGreen),
+              Container(width: 1, height: 32, color: const Color(0xFFE2E8F0), margin: const EdgeInsets.symmetric(horizontal: 20)),
               _buildCalorieStat('Kalan', '${remaining.toInt()} kcal', AppColors.success),
             ],
           ),
@@ -317,11 +335,11 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
         children: [
-          Expanded(child: _buildMacroCard('Karbonhidrat', carb, _carbGoal, AppColors.lightPurple, Icons.grain_rounded)),
+          Expanded(child: _buildMacroCard('Karbonhidrat', carb, _carbGoal, AppColors.carbYellow, Icons.grain_rounded)),
           const SizedBox(width: 12),
-          Expanded(child: _buildMacroCard('Protein', protein, _proteinGoal, AppColors.accentOrange, Icons.fitness_center_rounded)),
+          Expanded(child: _buildMacroCard('Protein', protein, _proteinGoal, AppColors.proteinBlue, Icons.fitness_center_rounded)),
           const SizedBox(width: 12),
-          Expanded(child: _buildMacroCard('Yağ', fat, _fatGoal, AppColors.warmOrange, Icons.water_drop_rounded)),
+          Expanded(child: _buildMacroCard('Yağ', fat, _fatGoal, AppColors.fatPink, Icons.water_drop_rounded)),
         ],
       ),
     );
@@ -334,7 +352,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       decoration: BoxDecoration(
         color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF2E2550), width: 1),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -416,7 +434,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       decoration: BoxDecoration(
         color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF2E2550)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         children: [
@@ -439,10 +457,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
   Widget _buildMealCard(MealLog meal) {
     final confidencePercent = (meal.confidence * 100).toInt();
-    final confidenceColor = meal.confidence > 0.8
+    final confidenceColor = meal.confidence >= 0.8
         ? AppColors.success
-        : meal.confidence > 0.6
-            ? AppColors.warmOrange
+        : meal.confidence >= 0.6
+            ? AppColors.activeOrange
             : AppColors.error;
 
     return Container(
@@ -450,7 +468,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       decoration: BoxDecoration(
         color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF2E2550), width: 1),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -460,7 +478,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [AppColors.primaryPurple, AppColors.deepPurple]),
+                gradient: AppColors.healthGradient,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: const Icon(Icons.restaurant_rounded, color: Colors.white, size: 24),
@@ -479,11 +497,11 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      _buildMacroChip('K:${meal.carbohydrate.toInt()}g', AppColors.lightPurple),
+                      _buildMacroChip('K:${meal.carbohydrate.toInt()}g', AppColors.carbYellow),
                       const SizedBox(width: 4),
-                      _buildMacroChip('P:${meal.protein.toInt()}g', AppColors.accentOrange),
+                      _buildMacroChip('P:${meal.protein.toInt()}g', AppColors.proteinBlue),
                       const SizedBox(width: 4),
-                      _buildMacroChip('Y:${meal.fat.toInt()}g', AppColors.warmOrange),
+                      _buildMacroChip('Y:${meal.fat.toInt()}g', AppColors.fatPink),
                     ],
                   ),
                   const SizedBox(height: 6),
@@ -509,7 +527,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                 Text(
                   '${meal.calories.toInt()}',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.accentOrange,
+                    fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.activeOrange,
                   ),
                 ),
                 Text('kcal', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.textSecondary)),
@@ -564,10 +582,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   Widget _buildFAB() {
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [AppColors.accentOrange, AppColors.warmOrange]),
+        gradient: AppColors.calorieGradient,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: AppColors.accentOrange.withOpacity(0.5), blurRadius: 20, offset: const Offset(0, 8)),
+          BoxShadow(color: AppColors.activeOrange.withOpacity(0.5), blurRadius: 20, offset: const Offset(0, 8)),
         ],
       ),
       child: FloatingActionButton.extended(
@@ -620,7 +638,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: const BorderSide(color: Color(0xFF2E2550)),
+                      side: const BorderSide(color: Color(0xFFE2E8F0)),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                     child: const Text('İptal', style: TextStyle(color: AppColors.textSecondary)),
