@@ -20,6 +20,19 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/app_icon.png
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  remove_alpha_ios: true
+
+  # Android'deki beyaz yuvarlağı yok edip ikonu tam oturtacak kısım:
+  adaptive_icon_background: "#FF7A1A" # Logonun arkasındaki turuncu tonunun hex kodu
+  adaptive_icon_foreground: "assets/images/app_icon.png"

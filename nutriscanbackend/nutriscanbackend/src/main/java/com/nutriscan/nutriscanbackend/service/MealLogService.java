@@ -33,6 +33,7 @@ public class MealLogService {
 
     private final MealLogRepository mealLogRepository;
     private final UserRepository userRepository;
+    private final LlmFoodService llmFoodService;
 
     @Value("${ai.api.url:http://localhost:5000}")
     private String aiApiUrl;
@@ -75,7 +76,7 @@ public class MealLogService {
         MealLog mealLog = MealLog.builder()
                 .user(user)
                 .date(logDate)
-                .foodName(aiResponse.getFood())
+                .foodName(llmFoodService.correctAndTranslateFood(aiResponse.getFood()))
                 .calories(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getCalories() : 0.0f)
                 .fat(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getFat_g() : 0.0f)
                 .protein(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getProtein_g() : 0.0f)
@@ -119,7 +120,7 @@ public class MealLogService {
 
         // 3. Map AI response to MealLogResponse (WITHOUT saving to database)
         return MealLogResponse.builder()
-                .foodName(aiResponse.getFood())
+                .foodName(llmFoodService.correctAndTranslateFood(aiResponse.getFood()))
                 .calories(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getCalories() : 0.0f)
                 .fat(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getFat_g() : 0.0f)
                 .protein(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getProtein_g() : 0.0f)
