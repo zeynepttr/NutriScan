@@ -8,6 +8,8 @@ class MealLog {
   final double confidence;
   final String date;
   final String? createdAt;
+  final bool? containsAllergen;
+  final String? allergenWarning;
 
   MealLog({
     required this.id,
@@ -19,6 +21,8 @@ class MealLog {
     required this.confidence,
     required this.date,
     this.createdAt,
+    this.containsAllergen,
+    this.allergenWarning,
   });
 
   factory MealLog.fromJson(Map<String, dynamic> json) {
@@ -32,6 +36,8 @@ class MealLog {
       confidence: (json['confidence'] as num).toDouble(),
       date: json['date'],
       createdAt: json['createdAt'],
+      containsAllergen: json['containsAllergen'] as bool?,
+      allergenWarning: json['allergenWarning'] as String?,
     );
   }
 }
@@ -73,6 +79,8 @@ class AnalysisResult {
   final double carbohydrate;
   final double fat;
   final double confidence;
+  final bool? containsAllergen;
+  final String? allergenWarning;
 
   AnalysisResult({
     required this.foodName,
@@ -81,6 +89,8 @@ class AnalysisResult {
     required this.carbohydrate,
     required this.fat,
     required this.confidence,
+    this.containsAllergen,
+    this.allergenWarning,
   });
 
   factory AnalysisResult.fromJson(Map<String, dynamic> json) {
@@ -91,6 +101,8 @@ class AnalysisResult {
       carbohydrate: (json['carbohydrate'] as num).toDouble(),
       fat: (json['fat'] as num).toDouble(),
       confidence: (json['confidence'] as num).toDouble(),
+      containsAllergen: json['containsAllergen'] as bool?,
+      allergenWarning: json['allergenWarning'] as String?,
     );
   }
 }
@@ -104,8 +116,11 @@ class UserProfile {
   final double weight;
   final double height;
   final String target;
+  final double? targetWeight;
+  final int? targetDays;
   final int dailyCalorieTarget;
   final String email;
+  final List<String>? allergens;
 
   UserProfile({
     required this.id,
@@ -116,8 +131,11 @@ class UserProfile {
     required this.weight,
     required this.height,
     required this.target,
+    this.targetWeight,
+    this.targetDays,
     required this.dailyCalorieTarget,
     required this.email,
+    this.allergens,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -130,8 +148,11 @@ class UserProfile {
       weight: (json['weight'] as num?)?.toDouble() ?? 0.0,
       height: (json['height'] as num?)?.toDouble() ?? 0.0,
       target: json['target'] ?? 'MAINTAIN',
+      targetWeight: (json['targetWeight'] as num?)?.toDouble(),
+      targetDays: json['targetDays'] as int?,
       dailyCalorieTarget: json['dailyCalorieTarget'] ?? 2000,
       email: json['email'] ?? '',
+      allergens: (json['allergens'] as List<dynamic>?)?.map((item) => item as String).toList(),
     );
   }
 
@@ -145,8 +166,11 @@ class UserProfile {
       'weight': weight,
       'height': height,
       'target': target,
+      'targetWeight': targetWeight,
+      'targetDays': targetDays,
       'dailyCalorieTarget': dailyCalorieTarget,
       'email': email,
+      'allergens': allergens,
     };
   }
 }

@@ -34,6 +34,9 @@ public class MealLog {
     private float carbohydrate;
     private float confidence;
 
+    private boolean containsAllergen;
+    private String allergenWarning;
+
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 }

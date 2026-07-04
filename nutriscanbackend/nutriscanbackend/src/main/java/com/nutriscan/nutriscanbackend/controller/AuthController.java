@@ -33,6 +33,11 @@ public class AuthController {
             throw new IllegalArgumentException("Email is already registered");
         }
 
+        // Validate weight goal safety limits
+        Double requestWeight = request.getWeight() != null ? request.getWeight() : 70.0;
+        String requestTarget = request.getTarget() != null ? request.getTarget() : "MAINTAIN";
+        LlmCalorieService.validateWeightGoal(requestWeight, requestTarget, request.getTargetWeight(), request.getTargetDays());
+
         User user = new User();
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
@@ -41,6 +46,9 @@ public class AuthController {
         user.setWeight(request.getWeight());
         user.setHeight(request.getHeight());
         user.setTarget(request.getTarget());
+        user.setTargetWeight(request.getTargetWeight());
+        user.setTargetDays(request.getTargetDays());
+        user.setAllergens(request.getAllergens() != null ? request.getAllergens() : new java.util.ArrayList<>());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
@@ -51,7 +59,7 @@ public class AuthController {
         double height = request.getHeight() != null ? request.getHeight() : 175.0;
         String target = request.getTarget() != null ? request.getTarget() : "MAINTAIN";
 
-        int dailyCalorieTarget = llmCalorieService.calculateCalories(age, gender, weight, height, target);
+        int dailyCalorieTarget = llmCalorieService.calculateCalories(age, gender, weight, height, target, request.getTargetWeight(), request.getTargetDays());
         user.setDailyCalorieTarget(dailyCalorieTarget);
 
         User savedUser = userRepository.save(user);
@@ -66,8 +74,11 @@ public class AuthController {
                 .weight(savedUser.getWeight())
                 .height(savedUser.getHeight())
                 .target(savedUser.getTarget())
+                .targetWeight(savedUser.getTargetWeight())
+                .targetDays(savedUser.getTargetDays())
                 .dailyCalorieTarget(savedUser.getDailyCalorieTarget())
                 .email(savedUser.getEmail())
+                .allergens(savedUser.getAllergens())
                 .build();
 
         return ResponseEntity.ok(AuthResponse.builder()
@@ -99,8 +110,11 @@ public class AuthController {
                 .weight(user.getWeight())
                 .height(user.getHeight())
                 .target(user.getTarget())
+                .targetWeight(user.getTargetWeight())
+                .targetDays(user.getTargetDays())
                 .dailyCalorieTarget(user.getDailyCalorieTarget())
                 .email(user.getEmail())
+                .allergens(user.getAllergens())
                 .build();
 
         return ResponseEntity.ok(AuthResponse.builder()

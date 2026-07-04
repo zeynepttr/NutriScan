@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../constants/app_theme.dart';
-import '../../services/api_service.dart';
+import '../services/api_service.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -19,12 +19,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _ageController = TextEditingController();
   final _weightController = TextEditingController();
   final _heightController = TextEditingController();
+  final _targetWeightController = TextEditingController();
+  final _targetDaysController = TextEditingController();
 
   String _gender = 'MALE';
   String _target = 'MAINTAIN';
   bool _isLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
+  final List<String> _selectedAllergens = [];
+  final List<String> _availableAllergens = [
+    'Gluten',
+    'Süt/Laktoz',
+    'Yumurta',
+    'Fıstık/Kuruyemiş',
+    'Deniz Ürünleri',
+    'Soya',
+  ];
 
   int _currentStep = 0;
   final PageController _pageController = PageController();
@@ -38,6 +49,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _ageController.dispose();
     _weightController.dispose();
     _heightController.dispose();
+    _targetWeightController.dispose();
+    _targetDaysController.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -83,6 +96,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _showLocalError('Lütfen geçerli bir boy girin.');
         return false;
       }
+    } else if (_currentStep == 4) {
+      if (_target == 'LOSE_WEIGHT' || _target == 'GAIN_WEIGHT') {
+        final targetWeight = double.tryParse(_targetWeightController.text.trim());
+        final targetDays = int.tryParse(_targetDaysController.text.trim());
+        final currentWeight = double.tryParse(_weightController.text.trim()) ?? 70.0;
+
+        if (targetWeight == null || targetWeight <= 10 || targetWeight > 500) {
+          _showLocalError('Lütfen geçerli bir hedef kilo girin.');
+          return false;
+        }
+        if (targetDays == null || targetDays <= 0 || targetDays > 3650) {
+          _showLocalError('Lütfen geçerli bir gün sayısı girin.');
+          return false;
+        }
+        if (_target == 'LOSE_WEIGHT' && targetWeight >= currentWeight) {
+          _showLocalError('Hedef kilonuz mevcut kilonuzdan düşük olmalıdır.');
+          return false;
+        }
+        if (_target == 'GAIN_WEIGHT' && targetWeight <= currentWeight) {
+          _showLocalError('Hedef kilonuz mevcut kilonuzdan yüksek olmalıdır.');
+          return false;
+        }
+        // En fazla haftalık 1.5 kg değişim
+        double minDays = ((currentWeight - targetWeight).abs() / 1.5) * 7.0;
+        if (targetDays < minDays) {
+          _showLocalError('Haftalık en fazla 1.5 kg kilo değişimi sağlıklıdır. Belirttiğiniz hedef için en az ${minDays.ceil()} gün girmelisiniz.');
+          return false;
+        }
+      }
     }
     setState(() => _errorMessage = null);
     return true;
@@ -117,6 +159,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _register() async {
     setState(() { _isLoading = true; _errorMessage = null; });
     try {
+      final isMaintain = _target == 'MAINTAIN';
       await ApiService.register(
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
@@ -127,6 +170,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         weight: double.tryParse(_weightController.text.trim()) ?? 70.0,
         height: double.tryParse(_heightController.text.trim()) ?? 175.0,
         target: _target,
+        targetWeight: isMaintain ? null : double.tryParse(_targetWeightController.text.trim()),
+        targetDays: isMaintain ? null : int.tryParse(_targetDaysController.text.trim()),
+        allergens: _selectedAllergens,
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -616,6 +662,75 @@ class _RegisterScreenState extends State<RegisterScreen> {
             icon: Icons.trending_up_rounded,
             color: AppColors.carbYellow,
           ),
+          if (_target == 'LOSE_WEIGHT' || _target == 'GAIN_WEIGHT') ...[
+            const SizedBox(height: 24),
+            _buildTextField(
+              controller: _targetWeightController,
+              label: 'Hedef Kilo (kg)',
+              icon: Icons.flag_outlined,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _targetDaysController,
+              label: 'Hedef Süre (gün)',
+              icon: Icons.calendar_today_outlined,
+              keyboardType: TextInputType.number,
+            ),
+          ],
+          const SizedBox(height: 28),
+          Text(
+            'Alerjen Hassasiyetleriniz ⚠️',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Yapay zeka analizlerinde sizi uyarmamızı istediğiniz içerikleri seçin.',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _availableAllergens.map((allergen) {
+              final isSelected = _selectedAllergens.contains(allergen);
+              return FilterChip(
+                label: Text(allergen),
+                selected: isSelected,
+                onSelected: (selected) {
+                  setState(() {
+                    if (selected) {
+                      _selectedAllergens.add(allergen);
+                    } else {
+                      _selectedAllergens.remove(allergen);
+                    }
+                  });
+                },
+                selectedColor: AppColors.primaryGreen.withOpacity(0.15),
+                checkmarkColor: AppColors.primaryGreen,
+                labelStyle: GoogleFonts.plusJakartaSans(
+                  color: isSelected ? AppColors.primaryGreen : AppColors.textPrimary,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: isSelected ? AppColors.primaryGreen : const Color(0xFFE2E8F0),
+                    width: isSelected ? 1.5 : 1,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 30),
         ],
       ),
     );

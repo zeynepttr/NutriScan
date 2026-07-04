@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_theme.dart';
 import '../models/models.dart';
-import '../../services/api_service.dart';
+import '../services/api_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -26,9 +26,20 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   late TextEditingController _weightController;
   late TextEditingController _heightController;
   late TextEditingController _calorieController;
+  late TextEditingController _targetWeightController;
+  late TextEditingController _targetDaysController;
   
   String _gender = 'MALE';
   String _target = 'MAINTAIN';
+  final List<String> _selectedAllergens = [];
+  final List<String> _availableAllergens = [
+    'Gluten',
+    'Süt/Laktoz',
+    'Yumurta',
+    'Fıstık/Kuruyemiş',
+    'Deniz Ürünleri',
+    'Soya',
+  ];
 
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
@@ -48,7 +59,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     _weightController = TextEditingController();
     _heightController = TextEditingController();
     _calorieController = TextEditingController();
-
+    _targetWeightController = TextEditingController();
+    _targetDaysController = TextEditingController();
+ 
     _loadProfile();
   }
 
@@ -60,6 +73,8 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     _weightController.dispose();
     _heightController.dispose();
     _calorieController.dispose();
+    _targetWeightController.dispose();
+    _targetDaysController.dispose();
     _animController.dispose();
     super.dispose();
   }
@@ -76,8 +91,14 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         _weightController.text = profile.weight.toString();
         _heightController.text = profile.height.toString();
         _calorieController.text = profile.dailyCalorieTarget.toString();
+        _targetWeightController.text = profile.targetWeight?.toString() ?? '';
+        _targetDaysController.text = profile.targetDays?.toString() ?? '';
         _gender = profile.gender;
         _target = profile.target;
+        _selectedAllergens.clear();
+        if (profile.allergens != null) {
+          _selectedAllergens.addAll(profile.allergens!);
+        }
       });
       _animController.forward();
     } catch (e) {
@@ -89,10 +110,43 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Validate target weight goals
+    if (_target == 'LOSE_WEIGHT' || _target == 'GAIN_WEIGHT') {
+      final targetWeight = double.tryParse(_targetWeightController.text.trim());
+      final targetDays = int.tryParse(_targetDaysController.text.trim());
+      final currentWeight = double.tryParse(_weightController.text.trim());
+
+      if (targetWeight == null) {
+        setState(() => _errorMessage = 'Lütfen geçerli bir hedef kilo girin.');
+        return;
+      }
+      if (targetDays == null || targetDays <= 0) {
+        setState(() => _errorMessage = 'Lütfen geçerli bir hedef gün sayısı girin.');
+        return;
+      }
+      if (currentWeight != null) {
+        if (_target == 'LOSE_WEIGHT' && targetWeight >= currentWeight) {
+          setState(() => _errorMessage = 'Hedef kilonuz mevcut kilonuzdan düşük olmalıdır.');
+          return;
+        }
+        if (_target == 'GAIN_WEIGHT' && targetWeight <= currentWeight) {
+          setState(() => _errorMessage = 'Hedef kilonuz mevcut kilonuzdan yüksek olmalıdır.');
+          return;
+        }
+        double minDays = ((currentWeight - targetWeight).abs() / 1.5) * 7.0;
+        if (targetDays < minDays) {
+          setState(() => _errorMessage = 'Haftalık en fazla 1.5 kg kilo değişimi sağlıklıdır. Belirttiğiniz hedef için en az ${minDays.ceil()} gün girmelisiniz.');
+          return;
+        }
+      }
+    }
+
     setState(() { _isSaving = true; _errorMessage = null; });
     try {
       final inputCalorie = int.tryParse(_calorieController.text.trim());
       final isCalorieManuallyEdited = inputCalorie != _userProfile?.dailyCalorieTarget;
+      final isMaintain = _target == 'MAINTAIN';
 
       await ApiService.updateUserProfile(
         firstName: _firstNameController.text.trim(),
@@ -102,6 +156,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         weight: double.tryParse(_weightController.text.trim()),
         height: double.tryParse(_heightController.text.trim()),
         target: _target,
+        targetWeight: isMaintain ? null : double.tryParse(_targetWeightController.text.trim()),
+        targetDays: isMaintain ? null : int.tryParse(_targetDaysController.text.trim()),
+        allergens: _selectedAllergens,
         dailyCalorieTarget: isCalorieManuallyEdited ? inputCalorie : null,
       );
 
@@ -384,6 +441,77 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
               onChanged: (v) => setState(() => _target = v!),
             ),
           ),
+        ),
+        if (_target == 'LOSE_WEIGHT' || _target == 'GAIN_WEIGHT') ...[
+          const SizedBox(height: 16),
+          _buildTextField(
+            controller: _targetWeightController,
+            label: 'Hedef Kilo (kg)',
+            icon: Icons.flag_outlined,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            validator: (v) => v != null && v.isNotEmpty ? null : 'Gerekli',
+          ),
+          const SizedBox(height: 16),
+          _buildTextField(
+            controller: _targetDaysController,
+            label: 'Hedef Süre (gün)',
+            icon: Icons.calendar_today_outlined,
+            keyboardType: TextInputType.number,
+            validator: (v) => v != null && v.isNotEmpty ? null : 'Gerekli',
+          ),
+        ],
+        const SizedBox(height: 24),
+        Text(
+          'Alerjen Hassasiyetleriniz ⚠️',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Yapay zeka analizlerinde uyarılmasını istediğiniz içerikleri seçin.',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 12,
+            color: AppColors.textSecondary,
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _availableAllergens.map((allergen) {
+            final isSelected = _selectedAllergens.contains(allergen);
+            return FilterChip(
+              label: Text(allergen),
+              selected: isSelected,
+              onSelected: (selected) {
+                setState(() {
+                  if (selected) {
+                    _selectedAllergens.add(allergen);
+                  } else {
+                    _selectedAllergens.remove(allergen);
+                  }
+                });
+              },
+              selectedColor: AppColors.primaryGreen.withOpacity(0.15),
+              checkmarkColor: AppColors.primaryGreen,
+              labelStyle: GoogleFonts.plusJakartaSans(
+                color: isSelected ? AppColors.primaryGreen : AppColors.textPrimary,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: isSelected ? AppColors.primaryGreen : const Color(0xFFE2E8F0),
+                  width: isSelected ? 1.5 : 1,
+                ),
+              ),
+            );
+          }).toList(),
         ),
         const SizedBox(height: 28),
         Text(

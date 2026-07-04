@@ -73,15 +73,21 @@ public class MealLogService {
         }
 
         // 3. Map AI response and save to database
+        String correctedFoodName = llmFoodService.correctAndTranslateFood(aiResponse.getFood());
+        String allergenWarning = llmFoodService.checkAllergenWarning(correctedFoodName, user.getAllergens());
+        boolean containsAllergen = allergenWarning != null;
+
         MealLog mealLog = MealLog.builder()
                 .user(user)
                 .date(logDate)
-                .foodName(llmFoodService.correctAndTranslateFood(aiResponse.getFood()))
+                .foodName(correctedFoodName)
                 .calories(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getCalories() : 0.0f)
                 .fat(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getFat_g() : 0.0f)
                 .protein(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getProtein_g() : 0.0f)
                 .carbohydrate(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getCarb_g() : 0.0f)
                 .confidence(aiResponse.getConfidence())
+                .containsAllergen(containsAllergen)
+                .allergenWarning(allergenWarning)
                 .build();
 
         MealLog saved = mealLogRepository.save(mealLog);
@@ -89,6 +95,7 @@ public class MealLogService {
     }
 
     public MealLogResponse analyzeImage(MultipartFile image) throws IOException {
+        User user = getAuthenticatedUser();
         // 1. Prepare request for Flask AI API
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -119,13 +126,19 @@ public class MealLogService {
         }
 
         // 3. Map AI response to MealLogResponse (WITHOUT saving to database)
+        String correctedFoodName = llmFoodService.correctAndTranslateFood(aiResponse.getFood());
+        String allergenWarning = llmFoodService.checkAllergenWarning(correctedFoodName, user.getAllergens());
+        boolean containsAllergen = allergenWarning != null;
+
         return MealLogResponse.builder()
-                .foodName(llmFoodService.correctAndTranslateFood(aiResponse.getFood()))
+                .foodName(correctedFoodName)
                 .calories(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getCalories() : 0.0f)
                 .fat(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getFat_g() : 0.0f)
                 .protein(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getProtein_g() : 0.0f)
                 .carbohydrate(aiResponse.getNutrition() != null ? aiResponse.getNutrition().getCarb_g() : 0.0f)
                 .confidence(aiResponse.getConfidence())
+                .containsAllergen(containsAllergen)
+                .allergenWarning(allergenWarning)
                 .build();
     }
 
@@ -140,6 +153,9 @@ public class MealLogService {
         User user = getAuthenticatedUser();
         LocalDate logDate = request.getDate() != null ? request.getDate() : LocalDate.now();
 
+        String allergenWarning = llmFoodService.checkAllergenWarning(request.getFoodName(), user.getAllergens());
+        boolean containsAllergen = allergenWarning != null;
+
         MealLog mealLog = MealLog.builder()
                 .user(user)
                 .date(logDate)
@@ -149,6 +165,8 @@ public class MealLogService {
                 .protein(request.getProtein())
                 .carbohydrate(request.getCarbohydrate())
                 .confidence(request.getConfidence())
+                .containsAllergen(containsAllergen)
+                .allergenWarning(allergenWarning)
                 .build();
 
         MealLog saved = mealLogRepository.save(mealLog);
@@ -211,6 +229,8 @@ public class MealLogService {
                 .protein(log.getProtein())
                 .carbohydrate(log.getCarbohydrate())
                 .confidence(log.getConfidence())
+                .containsAllergen(log.isContainsAllergen())
+                .allergenWarning(log.getAllergenWarning())
                 .build();
     }
 }

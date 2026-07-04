@@ -34,6 +34,15 @@ public class UserService {
 
     public UserResponse updateProfile(UserUpdateRequest request) {
         User user = getAuthenticatedUser();
+
+        // 1. Collect and validate target weight changes safely
+        Double currentWeight = request.getWeight() != null ? request.getWeight() : user.getWeight();
+        String currentTarget = request.getTarget() != null ? request.getTarget() : user.getTarget();
+        Double currentTargetWeight = request.getTargetWeight() != null ? request.getTargetWeight() : user.getTargetWeight();
+        Integer currentTargetDays = request.getTargetDays() != null ? request.getTargetDays() : user.getTargetDays();
+
+        LlmCalorieService.validateWeightGoal(currentWeight, currentTarget, currentTargetWeight, currentTargetDays);
+
         if (request.getFirstName() != null) {
             user.setFirstName(request.getFirstName());
         }
@@ -62,6 +71,17 @@ public class UserService {
             user.setTarget(request.getTarget());
             needsRecalculate = true;
         }
+        if (request.getTargetWeight() != null && !request.getTargetWeight().equals(user.getTargetWeight())) {
+            user.setTargetWeight(request.getTargetWeight());
+            needsRecalculate = true;
+        }
+        if (request.getTargetDays() != null && !request.getTargetDays().equals(user.getTargetDays())) {
+            user.setTargetDays(request.getTargetDays());
+            needsRecalculate = true;
+        }
+        if (request.getAllergens() != null) {
+            user.setAllergens(request.getAllergens());
+        }
 
         if (request.getDailyCalorieTarget() != null) {
             // User manually overridden the target calorie
@@ -73,8 +93,10 @@ public class UserService {
             double weight = user.getWeight() != null ? user.getWeight() : 70.0;
             double height = user.getHeight() != null ? user.getHeight() : 175.0;
             String target = user.getTarget() != null ? user.getTarget() : "MAINTAIN";
+            Double targetWeight = user.getTargetWeight();
+            Integer targetDays = user.getTargetDays();
 
-            int dailyCalorieTarget = llmCalorieService.calculateCalories(age, gender, weight, height, target);
+            int dailyCalorieTarget = llmCalorieService.calculateCalories(age, gender, weight, height, target, targetWeight, targetDays);
             user.setDailyCalorieTarget(dailyCalorieTarget);
         }
 
@@ -128,8 +150,11 @@ public class UserService {
                 .weight(user.getWeight())
                 .height(user.getHeight())
                 .target(user.getTarget())
+                .targetWeight(user.getTargetWeight())
+                .targetDays(user.getTargetDays())
                 .dailyCalorieTarget(user.getDailyCalorieTarget())
                 .email(user.getEmail())
+                .allergens(user.getAllergens())
                 .build();
     }
 }

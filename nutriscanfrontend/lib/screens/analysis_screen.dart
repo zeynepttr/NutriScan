@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../../constants/app_theme.dart';
 import '../../models/models.dart';
-import '../../services/api_service.dart';
+import '../services/api_service.dart';
 
 enum AnalysisState { picking, analyzing, result, error }
 
@@ -495,6 +495,34 @@ class _AnalysisScreenState extends State<AnalysisScreen> with TickerProviderStat
                   Text('Doğruluk: %$confidence', style: GoogleFonts.plusJakartaSans(fontSize: 13, color: confColor, fontWeight: FontWeight.w600)),
                 ],
               ),
+              if (r.containsAllergen == true && r.allergenWarning != null) ...[
+                const SizedBox(height: 20),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 24),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          r.allergenWarning!,
+                          style: GoogleFonts.plusJakartaSans(
+                            color: AppColors.error,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               // Calorie card
               Container(

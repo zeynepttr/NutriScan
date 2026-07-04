@@ -19,4 +19,6 @@ public class MealLogResponse {
     private float protein;
     private float carbohydrate;
     private float confidence;
+    private boolean containsAllergen;
+    private String allergenWarning;
 }

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 @Data
 @Builder
@@ -18,6 +19,9 @@ public class UserResponse {
     private Double weight;
     private Double height;
     private String target;
+    private Double targetWeight;
+    private Integer targetDays;
     private Integer dailyCalorieTarget;
     private String email;
+    private List<String> allergens;
 }

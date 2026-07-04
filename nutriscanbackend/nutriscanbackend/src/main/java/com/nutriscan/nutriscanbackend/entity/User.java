@@ -35,6 +35,10 @@ public class User implements UserDetails {
 
     private String target;
 
+    private Double targetWeight;
+
+    private Integer targetDays;
+
     private Integer dailyCalorieTarget;
 
     @Column(unique = true)
@@ -49,6 +53,11 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "food_id")
     )
     private List<Food> savedFoods;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_allergens", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "allergen")
+    private List<String> allergens = new java.util.ArrayList<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

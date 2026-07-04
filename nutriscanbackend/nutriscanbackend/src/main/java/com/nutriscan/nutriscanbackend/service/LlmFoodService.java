@@ -144,4 +144,108 @@ public class LlmFoodService {
         }
         return sb.toString().trim();
     }
+
+    public String checkAllergenWarning(String foodName, List<String> allergens) {
+        if (foodName == null || foodName.isEmpty() || allergens == null || allergens.isEmpty()) {
+            return null;
+        }
+
+        if (geminiApiKey == null || geminiApiKey.trim().isEmpty()) {
+            log.info("Gemini API key is not configured. Skipping LLM allergen check.");
+            return localAllergenCheck(foodName, allergens);
+        }
+
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + geminiApiKey;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            String prompt = String.format(
+                    "You are an expert food safety and allergy assistant. Analyze if the food item '%s' contains or is likely to contain any of the following user allergens: %s.\n\n" +
+                    "Instructions:\n" +
+                    "1. Evaluate if the food typically contains or is made using the listed allergens.\n" +
+                    "2. If it contains one or more allergens, generate a friendly and clear warning in Turkish. Example warning: 'Uyarı: Bu yiyecek alerjiniz olan süt ve yumurta içerebilir.'\n" +
+                    "3. If it is safe and does not contain any of the allergens, respond with ONLY the word 'SAFE'.\n" +
+                    "4. If there is a match, respond with ONLY the warning message in Turkish. Do not add any markdown, notes, explanations, or quotes. Just the plain text warning or 'SAFE'.",
+                    foodName,
+                    String.join(", ", allergens)
+            );
+
+            Map<String, Object> textPart = new HashMap<>();
+            textPart.put("text", prompt);
+
+            Map<String, Object> partsMap = new HashMap<>();
+            partsMap.put("parts", List.of(textPart));
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("contents", List.of(partsMap));
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
+            Map<String, Object> response = restTemplate.postForObject(url, entity, Map.class);
+
+            if (response != null && response.containsKey("candidates")) {
+                List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");
+                if (!candidates.isEmpty()) {
+                    Map<String, Object> firstCandidate = candidates.get(0);
+                    Map<String, Object> content = (Map<String, Object>) firstCandidate.get("content");
+                    List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
+                    if (!parts.isEmpty()) {
+                        String text = (String) parts.get(0).get("text");
+                        if (text != null) {
+                            String result = text.trim();
+                            if ("SAFE".equalsIgnoreCase(result)) {
+                                return null;
+                            }
+                            log.info("Allergen warning generated for food '{}': '{}'", foodName, result);
+                            return result;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to check allergens via Gemini API: {}", e.getMessage());
+        }
+
+        return localAllergenCheck(foodName, allergens);
+    }
+
+    private String localAllergenCheck(String foodName, List<String> allergens) {
+        if (foodName == null || allergens == null || allergens.isEmpty()) {
+            return null;
+        }
+        String foodLower = foodName.toLowerCase();
+        List<String> matchedAllergens = new java.util.ArrayList<>();
+
+        for (String allergen : allergens) {
+            String allergenLower = allergen.toLowerCase();
+            if (allergenLower.contains("süt") || allergenLower.contains("milk") || allergenLower.contains("lactose") || allergenLower.contains("laktoz")) {
+                if (foodLower.contains("pizza") || foodLower.contains("cheese") || foodLower.contains("peynir") || foodLower.contains("cup") || foodLower.contains("kek") || foodLower.contains("yoğurt") || foodLower.contains("yogurt") || foodLower.contains("süt") || foodLower.contains("milk") || foodLower.contains("dondurma") || foodLower.contains("ice cream")) {
+                    matchedAllergens.add("süt/laktoz");
+                }
+            }
+            if (allergenLower.contains("yumurta") || allergenLower.contains("egg")) {
+                if (foodLower.contains("yumurta") || foodLower.contains("egg") || foodLower.contains("kek") || foodLower.contains("cake") || foodLower.contains("makarna") || foodLower.contains("pasta") || foodLower.contains("mayonez") || foodLower.contains("mayo")) {
+                    matchedAllergens.add("yumurta");
+                }
+            }
+            if (allergenLower.contains("gluten") || allergenLower.contains("buğday") || allergenLower.contains("wheat")) {
+                if (foodLower.contains("ekmek") || foodLower.contains("bread") || foodLower.contains("makarna") || foodLower.contains("pasta") || foodLower.contains("kek") || foodLower.contains("cake") || foodLower.contains("pizza") || foodLower.contains("un") || foodLower.contains("flour")) {
+                    matchedAllergens.add("gluten");
+                }
+            }
+            if (allergenLower.contains("fıstık") || allergenLower.contains("peanut") || allergenLower.contains("nut")) {
+                if (foodLower.contains("çikolata") || foodLower.contains("chocolate") || foodLower.contains("fıstık") || foodLower.contains("peanut") || foodLower.contains("çerez") || foodLower.contains("nut")) {
+                    matchedAllergens.add("kuruyemiş/fıstık");
+                }
+            }
+        }
+
+        if (!matchedAllergens.isEmpty()) {
+            return "Uyarı: Bu yiyecek alerjiniz olan " + String.join(", ", matchedAllergens) + " içerebilir.";
+        }
+
+        return null;
+    }
 }

@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import '../constants/app_theme.dart';
 import '../models/models.dart';
-import '../../services/api_service.dart';
+import '../services/api_service.dart';
 import 'login_screen.dart';
 import 'analysis_screen.dart';
 import 'profile_screen.dart';
@@ -522,11 +522,22 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    meal.foodName,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          meal.foodName,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (meal.containsAllergen == true) ...[
+                        const SizedBox(width: 6),
+                        const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 18),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Row(
@@ -538,6 +549,17 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                       _buildMacroChip('Y:${meal.fat.toInt()}g', AppColors.fatPink),
                     ],
                   ),
+                  if (meal.containsAllergen == true && meal.allergenWarning != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      meal.allergenWarning!,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        color: AppColors.error,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 6),
                   Row(
                     children: [

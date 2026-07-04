@@ -33,6 +33,3 @@ flutter_launcher_icons:
   image_path: "assets/images/app_icon.png"
   remove_alpha_ios: true
 
-  # Android'deki beyaz yuvarlağı yok edip ikonu tam oturtacak kısım:
-  adaptive_icon_background: "#FF7A1A" # Logonun arkasındaki turuncu tonunun hex kodu
-  adaptive_icon_foreground: "assets/images/app_icon.png"

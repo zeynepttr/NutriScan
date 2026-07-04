@@ -56,6 +56,9 @@ class ApiService {
     required double weight,
     required double height,
     required String target,
+    double? targetWeight,
+    int? targetDays,
+    List<String>? allergens,
   }) async {
     final response = await http.post(
       Uri.parse(ApiConstants.register),
@@ -70,6 +73,9 @@ class ApiService {
         'weight': weight,
         'height': height,
         'target': target,
+        'targetWeight': targetWeight,
+        'targetDays': targetDays,
+        'allergens': allergens,
       }),
     );
     if (response.statusCode != 200 && response.statusCode != 201) {
@@ -196,6 +202,9 @@ class ApiService {
     double? weight,
     double? height,
     String? target,
+    double? targetWeight,
+    int? targetDays,
+    List<String>? allergens,
     int? dailyCalorieTarget,
   }) async {
     final headers = await _authHeaders();
@@ -210,6 +219,9 @@ class ApiService {
         if (weight != null) 'weight': weight,
         if (height != null) 'height': height,
         if (target != null) 'target': target,
+        if (targetWeight != null) 'targetWeight': targetWeight,
+        if (targetDays != null) 'targetDays': targetDays,
+        if (allergens != null) 'allergens': allergens,
         if (dailyCalorieTarget != null) 'dailyCalorieTarget': dailyCalorieTarget,
       }),
     );
